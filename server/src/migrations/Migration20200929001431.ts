@@ -4,7 +4,6 @@ export class Migration20200929001431 extends Migration {
 
   async up(): Promise<void> {
     this.addSql('create table "post" ("id" serial primary key, "created_at" timestamptz(0) not null, "updated_at" timestamptz(0) not null, "title" text not null);');
-    console.log('Done Migration');
   }
 
 }

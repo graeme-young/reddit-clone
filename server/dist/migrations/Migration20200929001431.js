@@ -15,7 +15,6 @@ class Migration20200929001431 extends migrations_1.Migration {
     up() {
         return __awaiter(this, void 0, void 0, function* () {
             this.addSql('create table "post" ("id" serial primary key, "created_at" timestamptz(0) not null, "updated_at" timestamptz(0) not null, "title" text not null);');
-            console.log('Done Migration');
         });
     }
 }
