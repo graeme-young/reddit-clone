@@ -28,6 +28,7 @@ exports.UserResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 const User_1 = require("../entities/User");
 const argon2_1 = __importDefault(require("argon2"));
+const constants_1 = require("../constants");
 let UsernamePasswordInput = class UsernamePasswordInput {
 };
 __decorate([
@@ -85,9 +86,9 @@ let UserResolver = class UserResolver {
                     errors: [
                         {
                             field: "username",
-                            message: "Username must be at least 3 characters"
-                        }
-                    ]
+                            message: "Username must be at least 3 characters",
+                        },
+                    ],
                 };
             }
             if (options.password.length <= 2) {
@@ -95,44 +96,55 @@ let UserResolver = class UserResolver {
                     errors: [
                         {
                             field: "password",
-                            message: "Username must be at least 3 characters"
-                        }
-                    ]
+                            message: "Password must be at least 3 characters",
+                        },
+                    ],
                 };
             }
             const hashedPassword = yield argon2_1.default.hash(options.password);
-            const user = em.create(User_1.User, {
-                username: options.username,
-                password: hashedPassword
-            });
+            let user;
             try {
-                yield em.persistAndFlush(user);
+                const result = yield em
+                    .createQueryBuilder(User_1.User)
+                    .getKnexQuery()
+                    .insert({
+                    username: options.username,
+                    password: hashedPassword,
+                    created_at: new Date(),
+                    updated_at: new Date(),
+                })
+                    .returning("*");
+                user = result[0];
             }
             catch (err) {
-                if (err.code === '23505' || err.detail.includes("already exists")) {
+                if (err.code === "23505" || err.detail.includes("already exists")) {
                     return {
                         errors: [
                             {
                                 field: "username",
-                                message: "Username is already being used"
-                            }
-                        ]
+                                message: "Username is already being used",
+                            },
+                        ],
                     };
                 }
             }
             req.session.userId = user.id;
-            return user;
+            return { user };
         });
     }
     login(options, { em, req }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield em.findOne(User_1.User, { username: options.username.toLowerCase() });
+            const user = yield em.findOne(User_1.User, {
+                username: options.username.toLowerCase(),
+            });
             if (!user) {
                 return {
-                    errors: [{
+                    errors: [
+                        {
                             field: "username",
-                            message: "Username does not exist"
-                        }]
+                            message: "Username does not exist",
+                        },
+                    ],
                 };
             }
             const valid = yield argon2_1.default.verify(user.password, options.password);
@@ -141,14 +153,25 @@ let UserResolver = class UserResolver {
                     errors: [
                         {
                             field: "password",
-                            message: "Incorrect password"
-                        }
-                    ]
+                            message: "Incorrect password",
+                        },
+                    ],
                 };
             }
             req.session.userId = user.id;
             return { user };
         });
+    }
+    logout({ req, res }) {
+        return new Promise((resolve) => req.session.destroy((err) => {
+            res.clearCookie(constants_1.COOKIE_NAME);
+            if (err) {
+                console.log(err);
+                resolve(false);
+                return;
+            }
+            resolve(true);
+        }));
     }
 };
 __decorate([
@@ -168,12 +191,19 @@ __decorate([
 ], UserResolver.prototype, "register", null);
 __decorate([
     type_graphql_1.Mutation(() => UserResponse),
-    __param(0, type_graphql_1.Arg('options', () => UsernamePasswordInput)),
+    __param(0, type_graphql_1.Arg("options", () => UsernamePasswordInput)),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [UsernamePasswordInput, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "login", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    __param(0, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UserResolver.prototype, "logout", null);
 UserResolver = __decorate([
     type_graphql_1.Resolver()
 ], UserResolver);
