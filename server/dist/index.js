@@ -28,7 +28,9 @@ const typeorm_1 = require("typeorm");
 const Post_1 = require("./entities/Post");
 const User_1 = require("./entities/User");
 const path_1 = __importDefault(require("path"));
-const upvote_1 = require("./entities/upvote");
+const Upvote_1 = require("./entities/Upvote");
+const createUserLoader_1 = require("./utils/createUserLoader");
+const createUpvoteLoader_1 = require("./utils/createUpvoteLoader");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const conn = yield typeorm_1.createConnection({
         type: "postgres",
@@ -38,7 +40,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         logging: true,
         synchronize: true,
         migrations: [path_1.default.join(__dirname, "./migrations/*")],
-        entities: [User_1.User, Post_1.Post, upvote_1.Upvote],
+        entities: [User_1.User, Post_1.Post, Upvote_1.Upvote],
     });
     yield conn.runMigrations();
     const app = express_1.default();
@@ -69,7 +71,13 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
             resolvers: [hello_1.HelloResolver, post_1.PostResolver, user_1.UserResolver],
             validate: false,
         }),
-        context: ({ req, res }) => ({ req, res, redis }),
+        context: ({ req, res }) => ({
+            req,
+            res,
+            redis,
+            userLoader: createUserLoader_1.createUserLoader(),
+            upvoteLoader: createUpvoteLoader_1.createUpvoteLoader(),
+        }),
     });
     apolloServer.applyMiddleware({
         app,

@@ -155,6 +155,11 @@ export type RegularErrorFragment = (
   & Pick<FieldError, 'field' | 'message'>
 );
 
+export type RegularUserFragment = (
+  { __typename?: 'User' }
+  & Pick<User, 'id' | 'username'>
+);
+
 export type RegularUserResponseFragment = (
   { __typename?: 'UserResponse' }
   & { errors?: Maybe<Array<(
@@ -164,11 +169,6 @@ export type RegularUserResponseFragment = (
     { __typename?: 'User' }
     & RegularUserFragment
   )> }
-);
-
-export type RegularUserFragment = (
-  { __typename?: 'User' }
-  & Pick<User, 'id' | 'username'>
 );
 
 export type ChangePasswordMutationVariables = Exact<{

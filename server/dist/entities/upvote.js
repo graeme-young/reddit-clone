@@ -41,4 +41,4 @@ Upvote = __decorate([
     typeorm_1.Entity()
 ], Upvote);
 exports.Upvote = Upvote;
-//# sourceMappingURL=upvote.js.map
+//# sourceMappingURL=Upvote.js.map
